@@ -1,20 +1,10 @@
----
-title: Mendes Multistate Model
-author: Samuel Isaacson, Chris Rackauckas
----
 
-Taken from Gupta and Mendes, *An Overview of Network-Based and -Free Approaches for Stochastic Simulation of Biochemical Systems*, Computation, 6 (9), 2018.
-
-```julia
 using DifferentialEquations, DiffEqProblemLibrary.JumpProblemLibrary, Plots, Statistics
 gr()
 fmt = :svg
 JumpProblemLibrary.importjumpproblems()
-```
 
-# Plot solutions by each method
 
-```julia
 methods = (Direct(),DirectFW(),FRM(),FRMFW(),SortingDirect(),NRM(),DirectCR(),RSSA())
 legs    = [typeof(method) for method in methods]
 #shortlabels = [string(leg)[12:end] for leg in legs]
@@ -36,9 +26,8 @@ fmt = :png
 for vars in varsyms
     push!(varidxs, [findfirst(x -> x==sym, rn.syms) for sym in vars])
 end
-```
 
-```julia
+
 p = []
 for (i,method) in enumerate(methods)
     jump_prob = JumpProblem(prob, method, rn, save_positions=(false,false))
@@ -54,20 +43,16 @@ for (i,method) in enumerate(methods)
     end
 end
 plot(p...,format=fmt)
-```
 
-# Benchmarking performance of the methods
 
-```julia
 function run_benchmark!(t, jump_prob, stepper)
     sol = solve(jump_prob, stepper)
     @inbounds for i in 1:length(t)
         t[i] = @elapsed (sol = solve(jump_prob, stepper))
     end
 end
-```
 
-```julia
+
 nsims = 100
 benchmarks = Vector{Vector{Float64}}()
 for method in methods
@@ -78,9 +63,8 @@ for method in methods
     run_benchmark!(t, jump_prob, stepper)
     push!(benchmarks, t)
 end
-```
 
-```julia
+
 medtimes = Vector{Float64}(undef,length(methods))
 stdtimes = Vector{Float64}(undef,length(methods))
 avgtimes = Vector{Float64}(undef,length(methods))
@@ -92,18 +76,15 @@ end
 using DataFrames
 
 df = DataFrame(names=shortlabels,medtimes=medtimes,relmedtimes=(medtimes/medtimes[1]),avgtimes=avgtimes, std=stdtimes, cv=stdtimes./avgtimes)
-```
 
-# Plotting
-```julia
+
 sa = [text(string(round(mt,digits=3),"s"),:center,12) for mt in df.medtimes]
 bar(df.names,df.relmedtimes,legend=:false, fmt=fmt)
 scatter!(df.names, .05 .+ df.relmedtimes, markeralpha=0, series_annotations=sa, fmt=fmt)
 ylabel!("median relative to Direct")
 title!("Multistate Model")
-```
 
-```julia{echo=false}
+
 using DiffEqBenchmarks
 DiffEqBenchmarks.bench_footer(WEAVE_ARGS[:folder],WEAVE_ARGS[:file])
-```
+

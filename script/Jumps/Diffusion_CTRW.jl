@@ -1,28 +1,18 @@
----
-title: Diffusion Model
-author: Samuel Isaacson, Chris Rackauckas
----
 
-```julia
 using DifferentialEquations, Plots, Statistics, DiffEqProblemLibrary.JumpProblemLibrary
 gr()
 fmt = :svg
 JumpProblemLibrary.importjumpproblems()
-```
 
-# Model and example solutions
-Here we implement a 1D continuous time random walk approximation of diffusion for $N$ lattice sites, with reflecting boundary conditions
 
-```julia
 N = 256
 jprob = prob_jump_diffnetwork
 rn = jprob.network(N)
 rnpar = jprob.rates
 u0 = jprob.u0(N)
 tf = 100. #jprob.tstop
-```
 
-```julia
+
 methods = (Direct(),DirectFW(),SortingDirect(),NRM(),DirectCR(),RSSA())
 legs    = [typeof(method) for method in methods]
 shortlabels = [string(leg)[12:end] for leg in legs]
@@ -34,20 +24,16 @@ for (i,method) in enumerate(methods)
     plot!(ploth,sol.t,sol[Int(N//2),:],label=shortlabels[i], format=fmt)
 end
 plot!(ploth, title="Population at middle lattice site", xlabel="time",format=fmt)
-```
 
-# Benchmarking performance of the methods
 
-```julia
 function run_benchmark!(t, jump_prob, stepper)
     sol = solve(jump_prob, stepper)
     @inbounds for i in 1:length(t)
         t[i] = @elapsed (sol = solve(jump_prob, stepper))
     end
 end
-```
 
-```julia
+
 nsims = 50
 benchmarks = Vector{Vector{Float64}}()
 for method in methods
@@ -57,9 +43,8 @@ for method in methods
     run_benchmark!(t, jump_prob, stepper)
     push!(benchmarks, t)
 end
-```
 
-```julia
+
 medtimes = Vector{Float64}(undef,length(methods))
 stdtimes = Vector{Float64}(undef,length(methods))
 avgtimes = Vector{Float64}(undef,length(methods))
@@ -72,18 +57,15 @@ using DataFrames
 
 df = DataFrame(names=shortlabels,medtimes=medtimes,relmedtimes=(medtimes/medtimes[1]),
                 avgtimes=avgtimes, std=stdtimes, cv=stdtimes./avgtimes)
-```
 
-# Plotting
-```julia
+
 sa = [string(round(mt,digits=4),"s") for mt in df.medtimes]
 bar(df.names,df.relmedtimes,legend=:false, fmt=fmt)
-scatter!(df.names, .05 .+ df.relmedtimes, markeralpha=0, series_annotations=sa, fmt=fmt)
+scatter!(df.names, .025 .+df.relmedtimes, markeralpha=0, series_annotations=sa, fmt=fmt)
 ylabel!("median relative to Direct")
 title!("256 Site 1D Diffusion CTRW")
-```
 
-```julia{echo=false}
+
 using DiffEqBenchmarks
 DiffEqBenchmarks.bench_footer(WEAVE_ARGS[:folder],WEAVE_ARGS[:file])
-```
+
